@@ -8,8 +8,8 @@ import json
 import aiofiles
 
 MAX_TASKS = 10  # Max async tasks
-MIN_IP = int(ip_address("0.0.0.0"))
-MAX_IP = int(ip_address("255.255.255.255"))
+MIN_IP = int(ip_address("1.0.0.0"))
+MAX_IP = int(ip_address("223.225.225.225"))
 IP_RANGE = MAX_IP - MIN_IP
 
 
