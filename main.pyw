@@ -2,8 +2,6 @@
 #save state
 #More efficient
 #Rename vars
-#Random thoughts:
-#Multiproccesing on chunk loading in python minecraft clone
 
 #IMPORTANT
 #VSCode crashes after a day of running. I you want to run it indefinetly run it from a terminal.
