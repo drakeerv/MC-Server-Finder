@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Output Files
+findings.json
+
 # C extensions
 *.so
 
@@ -131,3 +134,6 @@ dmypy.json
 # Editors
 .idea/
 .vscode/
+
+# Others
+.flake8
