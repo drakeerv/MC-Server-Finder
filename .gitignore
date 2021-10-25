@@ -134,6 +134,3 @@ dmypy.json
 # Editors
 .idea/
 .vscode/
-
-# Others
-.flake8
