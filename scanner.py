@@ -6,12 +6,14 @@ import asyncio
 import time
 import json
 import aiofiles
+import os
 
 MAX_TASKS = 10  # Max async tasks
 MIN_IP = int(ip_address("1.0.0.0"))
 MAX_IP = int(ip_address("223.225.225.225"))
 IP_RANGE = MAX_IP - MIN_IP
 
+RUN_INFINITELY = False  # Set this to true if you want scanner to auto-restart after it's done with all IPs
 TRIES = 3
 
 
@@ -33,13 +35,18 @@ except FileNotFoundError:
     json_db = {}
 
 
+if os.name == "nt":
+    # Setting event loop policy since asyncio crashes
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+
 async def scan_ip(ip: str):
     server = MinecraftServer.lookup(ip)
 
     try:
         status = await server.async_status(tries=TRIES)
     except Exception as e:
-        if e not in [asyncio.TimeoutError, OSError]:
+        if type(e) not in [asyncio.TimeoutError, OSError, ConnectionRefusedError]:
             logger.debug(
                 f"Did not get a response from {ip}. Reason: {type(e).__name__}"
             )
@@ -87,11 +94,9 @@ async def handle_ip_chunk(task_num: int, _min: int, _max: int):
 
     for ip_num in range(_min, _max):
         ip = str(ip_address(ip_num))
-        current_ip = ip
-
         if ip in json_db:
             logger.info(f"{ip} has already been scanned, not scanning again..")
-            return
+            continue
 
         payload = await scan_ip(ip)
 
@@ -107,10 +112,11 @@ async def handle_ip_chunk(task_num: int, _min: int, _max: int):
         await asyncio.sleep(0.2)
 
 
-async def main():
+async def run_scanner():
     logger.info(
         f"Searching {IP_RANGE:,} IPs... Starting from: {str(ip_address(MIN_IP))}"
     )
+    logger.info("Spawning tasks")
 
     # Chunking all IPs into multiple parts and creating tasks
     ips_per_task, remaining = divmod(IP_RANGE, MAX_TASKS)
@@ -132,6 +138,20 @@ async def main():
         ).set_name(f"Scanner process {task_number}")
 
     await asyncio.gather(*asyncio.all_tasks() - {asyncio.current_task()})
+
+
+async def main():
+    if RUN_INFINITELY:
+        logger.info(
+            "RUN_INFINITELY has been set to True. Scanner will keep running until stopped"
+        )
+        while True:
+            await run_scanner()
+    else:
+        logger.info(
+            "RUN_INFINITELY has been set to False. Scanner will run once and then exit"
+        )
+        await run_scanner()
 
 
 if __name__ == "__main__":
