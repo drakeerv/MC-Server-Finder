@@ -28,9 +28,9 @@ ips_scanned = 0
 
 
 try:
-    json_db: dict = json.loads(open("./findings.json", "r").read())
+    json_db: dict = json.loads(open("../findings.json", "r").read())
 except FileNotFoundError:
-    with open("./findings.json", "w") as f:  # Creates json file
+    with open("../findings.json", "w") as f:  # Creates json file
         f.write("{}")
     json_db = {}
 
@@ -105,14 +105,14 @@ async def handle_ip_chunk(task_num: int, _min: int, _max: int):
 
         json_db[ip] = payload
 
-        async with aiofiles.open("./findings.json", mode="w") as f:
+        async with aiofiles.open("../findings.json", mode="w") as f:
             await f.write(json.dumps(json_db, indent=4))
 
         ips_scanned = ips_scanned + 1
         await asyncio.sleep(0.2)
 
 
-async def run_scanner():
+async def run_scanner_tasks():
     logger.info(
         f"Searching {IP_RANGE:,} IPs... Starting from: {str(ip_address(MIN_IP))}"
     )
@@ -146,15 +146,15 @@ async def main():
             "RUN_INFINITELY has been set to True. Scanner will keep running until stopped"
         )
         while True:
-            await run_scanner()
+            await run_scanner_tasks()
     else:
         logger.info(
             "RUN_INFINITELY has been set to False. Scanner will run once and then exit"
         )
-        await run_scanner()
+        await run_scanner_tasks()
 
 
-if __name__ == "__main__":
+def run_scanner():
     loop = asyncio.get_event_loop()
     try:
         loop.run_until_complete(main())
