@@ -12,6 +12,8 @@ MIN_IP = int(ip_address("1.0.0.0"))
 MAX_IP = int(ip_address("223.225.225.225"))
 IP_RANGE = MAX_IP - MIN_IP
 
+TRIES = 3
+
 
 logging.basicConfig(
     format="%(asctime)s %(levelname)s - %(message)s",
@@ -35,7 +37,7 @@ async def scan_ip(ip: str):
     server = MinecraftServer.lookup(ip)
 
     try:
-        status = await server.async_status()
+        status = await server.async_status(tries=TRIES)
     except Exception as e:
         if e not in [asyncio.TimeoutError, OSError]:
             logger.debug(
@@ -62,7 +64,7 @@ async def scan_ip(ip: str):
 
     try:
         # Sometimes this thing times out
-        query = await server.async_query()
+        query = await server.async_query(tries=TRIES)
         payload.update(
             {
                 "software": {
