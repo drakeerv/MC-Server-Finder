@@ -36,9 +36,8 @@ async def scan_ip(ip: str):
 
     try:
         status = await server.async_status()
-        print(status)
     except Exception as e:
-        if type(e) not in [asyncio.TimeoutError, OSError]:
+        if e not in [asyncio.exceptions.TimeoutError, OSError]:
             logger.debug(
                 f"Did not get a response from {ip}. Reason: {type(e).__name__}"
             )
@@ -56,7 +55,7 @@ async def scan_ip(ip: str):
             "max": status.players.max,
             "online": status.players.online,
             "players": [{"id": i.id, "name": i.name} for i in status.players.sample]
-            if status.players
+            if type(status.players.sample) == type([])
             else None,
         },
     }
