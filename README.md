@@ -11,5 +11,5 @@ pip install -r requirements.txt
 To run the scanner, open up your terminal, and run
 
 ```sh
-python scanner.py
+python run.py
 ```
