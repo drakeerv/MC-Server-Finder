@@ -13,6 +13,7 @@ MIN_IP = int(ip_address("1.0.0.0"))
 MAX_IP = int(ip_address("223.225.225.225"))
 IP_RANGE = MAX_IP - MIN_IP
 
+DELAY_PER_IP = 0.2  # seconds
 RUN_INFINITELY = False  # Set this to true if you want scanner to auto-restart after it's done with all IPs
 TRIES = 3
 
@@ -109,7 +110,7 @@ async def handle_ip_chunk(task_num: int, _min: int, _max: int):
             await f.write(json.dumps(json_db, indent=4))
 
         ips_scanned = ips_scanned + 1
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(DELAY_PER_IP)
 
 
 async def run_scanner_tasks():
@@ -141,11 +142,13 @@ async def run_scanner_tasks():
 
 
 async def main():
+    global ips_scanned
     if RUN_INFINITELY:
         logger.info(
             "RUN_INFINITELY has been set to True. Scanner will keep running until stopped"
         )
         while True:
+            ips_scanned = 0
             await run_scanner_tasks()
     else:
         logger.info(
