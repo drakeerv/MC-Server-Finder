@@ -4,8 +4,6 @@ WORKDIR /finder
 
 COPY requirements.txt .
 
-COPY init-db.sql /docker-entrypoint-initdb.d/
-
 RUN pip install -r requirements.txt
 
 COPY . .
