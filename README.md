@@ -1,6 +1,7 @@
 # MC-Server-Finder
 
 A project that scans the internet to find open Minecraft servers.
+[Discord](https://discord.gg/h6CQQdRF5c)
 
 Install the dependencies by running
 
