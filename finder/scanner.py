@@ -79,7 +79,7 @@ async def handle_ip_chunk(task_num: int, _min: int, _max: int):
 
         await scan_ip(ip)
 
-        ips_scanned = ips_scanned + 1
+        ips_scanned += 1
         await asyncio.sleep(DELAY_PER_IP)
 
 
