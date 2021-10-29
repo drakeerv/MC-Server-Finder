@@ -1,5 +1,6 @@
 from ipaddress import ip_address
 from mcstatus import MinecraftServer
+from db import init_db, Server
 
 import logging
 import asyncio
@@ -13,6 +14,7 @@ MIN_IP = int(ip_address("1.0.0.0"))
 MAX_IP = int(ip_address("223.225.225.225"))
 IP_RANGE = MAX_IP - MIN_IP
 
+DELAY_PER_IP = 0.2  # seconds
 RUN_INFINITELY = False  # Set this to true if you want scanner to auto-restart after it's done with all IPs
 TRIES = 3
 
@@ -25,14 +27,6 @@ logging.basicConfig(
 logger = logging.getLogger("finder")
 current_ip: int = 0
 ips_scanned = 0
-
-
-try:
-    json_db: dict = json.loads(open("../findings.json", "r").read())
-except FileNotFoundError:
-    with open("../findings.json", "w") as f:  # Creates json file
-        f.write("{}")
-    json_db = {}
 
 
 if os.name == "nt":
@@ -55,61 +49,38 @@ async def scan_ip(ip: str):
     logger.info(f"Got response from {ip}. Latency: {int(status.latency)}ms")
     updated_at = int(time.time())  # Unix epoch
 
+    existing_server = await Server.filter(
+        ip=ip
+    ).get_or_none()  # Returns None if server exists in DB
+
+    if existing_server:
+        logger.info(f"{ip} has already been scanned, not scanning again..")
+        return
+
     payload = {
-        "updated_at": updated_at,
-        "version": {"name": status.version.name, "protocol": status.version.protocol},
+        "ip": ip,
         "description": status.description,
         "latency": status.latency,
-        "players": {
-            "max": status.players.max,
-            "online": status.players.online,
-            "players": [{"id": i.id, "name": i.name} for i in status.players.sample]
-            if status.players.sample
-            else None,
-        },
+        "version": status.version.name,
+        "players_max": status.players.max,
+        "players_online": status.players.online,
+        "updated_at": updated_at,
     }
 
-    try:
-        # Sometimes this thing times out
-        query = await server.async_query(tries=TRIES)
-        payload.update(
-            {
-                "software": {
-                    "version": query.software.version,
-                    "plugins": query.software.plugins,
-                    "brand": query.software.brand,
-                },
-                "motd": query.motd,
-            }
-        )
-    except Exception as e:
-        logger.error(f"Query failed for {ip}, moving on. Reason: {type(e).__name__}")
-
-    return payload
+    await Server.create(**payload)
 
 
 async def handle_ip_chunk(task_num: int, _min: int, _max: int):
-    global json_db, current_ip, ips_scanned
+    global current_ip, ips_scanned
     logger.debug(f"Scanner {task_num} has been spawned")
 
     for ip_num in range(_min, _max):
         ip = str(ip_address(ip_num))
-        if ip in json_db:
-            logger.info(f"{ip} has already been scanned, not scanning again..")
-            continue
 
-        payload = await scan_ip(ip)
+        await scan_ip(ip)
 
-        if not payload:
-            continue
-
-        json_db[ip] = payload
-
-        async with aiofiles.open("../findings.json", mode="w") as f:
-            await f.write(json.dumps(json_db, indent=4))
-
-        ips_scanned = ips_scanned + 1
-        await asyncio.sleep(0.2)
+        ips_scanned += 1
+        await asyncio.sleep(DELAY_PER_IP)
 
 
 async def run_scanner_tasks():
@@ -141,11 +112,15 @@ async def run_scanner_tasks():
 
 
 async def main():
+    global ips_scanned
+    await init_db()
+
     if RUN_INFINITELY:
         logger.info(
             "RUN_INFINITELY has been set to True. Scanner will keep running until stopped"
         )
         while True:
+            ips_scanned = 0
             await run_scanner_tasks()
     else:
         logger.info(
