@@ -5,8 +5,6 @@ from db import init_db, Server
 import logging
 import asyncio
 import time
-import json
-import aiofiles
 import os
 
 MAX_TASKS = 10  # Max async tasks
@@ -15,7 +13,7 @@ MAX_IP = int(ip_address("223.225.225.225"))
 IP_RANGE = MAX_IP - MIN_IP
 
 DELAY_PER_IP = 0.2  # seconds
-RUN_INFINITELY = False  # Set this to true if you want scanner to auto-restart after it's done with all IPs
+RUN_INFINITELY = (os.environ["RUN_INFINITELY"].lower() == "true")  # Set this to true if you want scanner to auto-restart after it's done with all IPs
 TRIES = 3
 
 
