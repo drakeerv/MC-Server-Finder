@@ -1,5 +1,4 @@
 mcstatus
-aiofiles
 asyncpg
 tortoise-orm
 python-dotenv

@@ -13,7 +13,7 @@ MAX_IP = int(ip_address("223.225.225.225"))
 IP_RANGE = MAX_IP - MIN_IP
 
 DELAY_PER_IP = 0.2  # seconds
-RUN_INFINITELY = (os.environ["RUN_INFINITELY"].lower() == "true")  # Set this to true if you want scanner to auto-restart after it's done with all IPs
+RUN_INFINITELY = False  # Set this to true if you want scanner to auto-restart after it's done with all IPs
 TRIES = 3
 
 
@@ -38,7 +38,7 @@ async def scan_ip(ip: str):
     try:
         status = await server.async_status(tries=TRIES)
     except Exception as e:
-        if type(e) not in [asyncio.TimeoutError, OSError, ConnectionRefusedError]:
+        if type(e) not in [asyncio.TimeoutError, OSError, ConnectionRefusedError, ConnectionResetError]:
             logger.debug(
                 f"Did not get a response from {ip}. Reason: {type(e).__name__}"
             )
