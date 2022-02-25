@@ -1,6 +1,9 @@
+#TODO: scan port range
+
 from ipaddress import ip_address
 from mcstatus import MinecraftServer
 from db import init_db, Server
+from socket import socket, AF_INET, SOCK_STREAM
 
 import logging
 import asyncio
@@ -33,6 +36,17 @@ if os.name == "nt":
 
 
 async def scan_ip(ip: str):
+    sock = socket(AF_INET, SOCK_STREAM)
+    result = sock.connect_ex((ip, 25565))
+
+    if result != 0:
+        logger.debug(
+            f"Did not get a response from {ip}. Reason: {type(e).__name__}"
+        )
+        return
+
+    sock.close()
+
     server = MinecraftServer.lookup(ip)
 
     try:
