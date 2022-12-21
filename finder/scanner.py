@@ -41,7 +41,7 @@ async def scan_ip(ip: str):
 
     if result != 0:
         logger.debug(
-            f"Did not get a response from {ip}. Reason: {type(e).__name__}"
+            f"Did not get a response from {ip}. Result: {result}"
         )
         return
 
